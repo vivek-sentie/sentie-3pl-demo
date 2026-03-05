@@ -33,12 +33,12 @@ const AP_CHECKLIST = [
 ];
 
 const AR_CHECKLIST = [
-    { id: "orders_collected", label: "Orders Collected", keywords: ["AR Job", "Orders Collected"] },
-    { id: "shipping_retrieved", label: "Shipping Costs Retrieved", keywords: ["Shipping Costs"] },
-    { id: "fees_calculated", label: "Fulfillment Fees Calculated", keywords: ["Fulfillment Fees", "Packaging", "Storage"] },
+    { id: "orders_collected", label: "Orders Collected", keywords: ["Orders Collected", "AR Job Opened"] },
+    { id: "shipping_retrieved", label: "Shipping Costs Retrieved", keywords: ["Shipping Costs Retrieved"] },
+    { id: "fees_calculated", label: "Fulfillment Fees Calculated", keywords: ["Fulfillment Fees Calculated", "Packaging & Storage"] },
     { id: "invoice_generated", label: "Invoice Generated", keywords: ["Invoice Generated"] },
-    { id: "invoice_sent", label: "Invoice Sent", keywords: ["Invoice Sent", "Invoice Email"] },
-    { id: "payment_received", label: "Payment Received", keywords: ["AR Complete", "Payment"] },
+    { id: "invoice_sent", label: "Invoice Sent", keywords: ["Invoice Sent"] },
+    { id: "payment_received", label: "Payment Received", keywords: ["AR Complete"] },
 ];
 
 const apStatusConfig: Record<APStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {

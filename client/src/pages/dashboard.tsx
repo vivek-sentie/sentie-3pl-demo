@@ -121,7 +121,15 @@ const createConsolidatedAPSteps = (invoice: ConsolidatedAPInvoice, orders: Order
       status: "input_required", requiresApproval: true,
       draftContent: {
         to: invoice.carrier === "UPS" ? "disputes@ups.com" : "billing@fedex.com", subject: `Invoice Dispute - ${invoice.invoiceNumber}`,
-        body: `Hello,\n\nWe have identified ${disputes.length} discrepancies on invoice ${invoice.invoiceNumber}:\n\n${disputes.map(li => `• Tracking ${li.trackingNumber}: Billed $${li.totalCharge.toFixed(2)}, Expected $${li.expectedCharge?.toFixed(2) || "N/A"} (Variance: $${li.variance?.toFixed(2)})`).join("\n")}\n\nTotal disputed amount: $${totalVariance.toFixed(2)}\n\nPlease review and issue credit.\n\nThank you,\nCascade Logistics`,
+        body: `Hello,\n\nWe have identified ${disputes.length} discrepancies on invoice ${invoice.invoiceNumber}:\n\n${disputes.map(li => {
+          const order = orders.find(o => o.id === li.orderId);
+          const reason = li.expectedCharge && li.weight
+            ? (li.zone <= 2 && order?.zone && order.zone < li.zone
+              ? `As per contract, shipped to Zone ${order.zone}, but billed at Zone ${li.zone}.`
+              : `Billed at ${li.weight} lbs (dimensional weight), but actual package weight is ${order?.weight || "?"} lbs.`)
+            : `Unexpected charge variance against contracted rate.`;
+          return `• Tracking ${li.trackingNumber}: Billed $${li.totalCharge.toFixed(2)}, Expected $${li.expectedCharge?.toFixed(2) || "N/A"} (Variance: $${li.variance?.toFixed(2)})\n  Reason: ${reason}`;
+        }).join("\n\n")}\n\nTotal disputed amount: $${totalVariance.toFixed(2)}\n\nPlease review and issue credit.\n\nThank you,\nCascade Logistics`,
       },
     });
 
