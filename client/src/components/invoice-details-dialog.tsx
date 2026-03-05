@@ -324,18 +324,26 @@ export function InvoiceDetailsDialog({ invoice, orders, customer, activities, op
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                                {arInvoice.orderIds.map((orderId, idx) => {
-                                                    const order = orders.find(o => o.id === orderId);
-                                                    if (!order) return null;
-                                                    const totalWarehouse = order.warehouseFees.fulfillmentFee + order.warehouseFees.itemPickFee + order.warehouseFees.packagingMaterials + order.warehouseFees.storageCost;
-                                                    return (
-                                                        <TableRow key={idx}>
-                                                            <TableCell className="font-medium">{order.orderNumber}</TableCell>
-                                                            <TableCell className="font-mono text-xs text-muted-foreground">{order.trackingNumber.slice(-8)}</TableCell>
-                                                            <TableCell className="text-right">${(totalWarehouse + order.shippingCost).toFixed(2)}</TableCell>
-                                                        </TableRow>
-                                                    );
-                                                })}
+                                                {arProgress?.ordersCollected ? (
+                                                    arInvoice.orderIds.map((orderId, idx) => {
+                                                        const order = orders.find(o => o.id === orderId);
+                                                        if (!order) return null;
+                                                        const totalWarehouse = order.warehouseFees.fulfillmentFee + order.warehouseFees.itemPickFee + order.warehouseFees.packagingMaterials + order.warehouseFees.storageCost;
+                                                        return (
+                                                            <TableRow key={idx}>
+                                                                <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                                                                <TableCell className="font-mono text-xs text-muted-foreground">{order.trackingNumber.slice(-8)}</TableCell>
+                                                                <TableCell className="text-right">${(totalWarehouse + order.shippingCost).toFixed(2)}</TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <TableRow>
+                                                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground italic">
+                                                            Collecting fulfilled orders...
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
                                             </TableBody>
                                         </Table>
 
