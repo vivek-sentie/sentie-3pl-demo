@@ -108,8 +108,8 @@ const createConsolidatedAPSteps = (invoice: ConsolidatedAPInvoice, orders: Order
       const order = orders.find(o => o.id === li.orderId);
       const reason = li.expectedCharge && li.weight
         ? (li.zone <= 2 && order?.zone && order.zone < li.zone
-          ? `Billed Zone ${li.zone}, should be Zone ${order.zone}. Overcharge: $${li.variance?.toFixed(2)}`
-          : `Billed ${li.weight} lbs (dimensional), actual ${order?.weight || "?"} lbs. Overcharge: $${li.variance?.toFixed(2)}`)
+          ? `Zone misclassification. ${invoice.carrier} charged Zone ${li.zone} rate for an SF-to-SF delivery that should be Zone ${order.zone}. Variance: $${li.variance?.toFixed(2)}.`
+          : `Dimensional weight vs actual weight dispute. ${invoice.carrier} billed ${li.weight.toFixed(1)} lbs, actual is ${order?.weight.toFixed(1) || "?"} lbs. Variance: $${li.variance?.toFixed(2)}.`)
         : `Variance of $${li.variance?.toFixed(2)} detected`;
 
       disputeSteps.push({ delay: 2000, type: "discrepancy_found", title: `Discrepancy: ${li.trackingNumber.slice(-4)}`, description: reason, status: "disputed" });
@@ -125,10 +125,10 @@ const createConsolidatedAPSteps = (invoice: ConsolidatedAPInvoice, orders: Order
           const order = orders.find(o => o.id === li.orderId);
           const reason = li.expectedCharge && li.weight
             ? (li.zone <= 2 && order?.zone && order.zone < li.zone
-              ? `As per contract, shipped to Zone ${order.zone}, but billed at Zone ${li.zone}.`
-              : `Billed at ${li.weight} lbs (dimensional weight), but actual package weight is ${order?.weight || "?"} lbs.`)
-            : `Unexpected charge variance against contracted rate.`;
-          return `• Tracking ${li.trackingNumber}: Billed $${li.totalCharge.toFixed(2)}, Expected $${li.expectedCharge?.toFixed(2) || "N/A"} (Variance: $${li.variance?.toFixed(2)})\n  Reason: ${reason}`;
+              ? `Zone misclassification. ${invoice.carrier} charged Zone ${li.zone} rate for an SF-to-SF delivery that should be Zone ${order.zone}. Variance: $${li.variance?.toFixed(2)}.`
+              : `Dimensional weight vs actual weight dispute. ${invoice.carrier} billed ${li.weight.toFixed(1)} lbs, actual is ${order?.weight.toFixed(1) || "?"} lbs. Variance: $${li.variance?.toFixed(2)}.`)
+            : `Variance of $${li.variance?.toFixed(2)} detected.`;
+          return `• Tracking ${li.trackingNumber}:\n  ${reason}`;
         }).join("\n\n")}\n\nTotal disputed amount: $${totalVariance.toFixed(2)}\n\nPlease review and issue credit.\n\nThank you,\nCascade Logistics`,
       },
     });
@@ -408,6 +408,18 @@ export default function Dashboard() {
   }, [simulation, pauseSimulation, startSimulation, resumeSimulation]);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent spacebar scrolling if focused on body
+      if (e.code === 'Space' && e.target === document.body) {
+        e.preventDefault();
+        toggleSimulation();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleSimulation]);
+
+  useEffect(() => {
     if (!hasAutoStarted.current) {
       hasAutoStarted.current = true;
       const autoStartTimer = setTimeout(() => startSimulation(), 800);
@@ -585,7 +597,7 @@ export default function Dashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <InvoiceTable invoices={filteredArInvoices} consumers={CUSTOMERS} activeTab="ar" onInvoiceClick={(id) => setSelectedARInvoice(filteredArInvoices.find(i => i.id === id) || null)} />
+                <InvoiceTable invoices={filteredArInvoices} consumers={CUSTOMERS} activeTab="ar" onInvoiceClick={(id: string) => setSelectedARInvoice(filteredArInvoices.find(i => i.id === id) || null)} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -598,8 +610,8 @@ export default function Dashboard() {
         customer={selectedARInvoice ? CUSTOMERS.find(c => c.id === selectedARInvoice.customerId) : undefined}
         activities={activities}
         open={!!(selectedAPInvoice || selectedARInvoice)}
-        onOpenChange={(open) => { if (!open) { setSelectedAPInvoice(null); setSelectedARInvoice(null); } }}
-        onAction={(id) => setDraftToApprove(id)}
+        onOpenChange={(open: boolean) => { if (!open) { setSelectedAPInvoice(null); setSelectedARInvoice(null); } }}
+        onAction={(id: string) => setDraftToApprove(id)}
         context={activeTab}
         pendingAction={!!(selectedAPInvoice && pendingInvoiceActions[selectedAPInvoice.id]) || !!(selectedARInvoice && pendingInvoiceActions[selectedARInvoice.id])}
       />
