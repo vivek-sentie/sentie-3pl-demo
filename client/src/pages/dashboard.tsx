@@ -107,7 +107,7 @@ const createConsolidatedAPSteps = (invoice: ConsolidatedAPInvoice, orders: Order
     disputes.forEach((li) => {
       const order = orders.find(o => o.id === li.orderId);
       const reason = li.expectedCharge && li.weight
-        ? (li.zone <= 2 && order?.zone && order.zone < li.zone
+        ? (order?.zone && order.zone < li.zone
           ? `Zone misclassification. ${invoice.carrier} charged Zone ${li.zone} rate for an SF-to-SF delivery that should be Zone ${order.zone}. Variance: $${li.variance?.toFixed(2)}.`
           : `Dimensional weight vs actual weight dispute. ${invoice.carrier} billed ${li.weight.toFixed(1)} lbs, actual is ${order?.weight.toFixed(1) || "?"} lbs. Variance: $${li.variance?.toFixed(2)}.`)
         : `Variance of $${li.variance?.toFixed(2)} detected`;
@@ -124,7 +124,7 @@ const createConsolidatedAPSteps = (invoice: ConsolidatedAPInvoice, orders: Order
         body: `Hello,\n\nWe have identified ${disputes.length} discrepancies on invoice ${invoice.invoiceNumber}:\n\n${disputes.map(li => {
           const order = orders.find(o => o.id === li.orderId);
           const reason = li.expectedCharge && li.weight
-            ? (li.zone <= 2 && order?.zone && order.zone < li.zone
+            ? (order?.zone && order.zone < li.zone
               ? `Zone misclassification. ${invoice.carrier} charged Zone ${li.zone} rate for an SF-to-SF delivery that should be Zone ${order.zone}. Variance: $${li.variance?.toFixed(2)}.`
               : `Dimensional weight vs actual weight dispute. ${invoice.carrier} billed ${li.weight.toFixed(1)} lbs, actual is ${order?.weight.toFixed(1) || "?"} lbs. Variance: $${li.variance?.toFixed(2)}.`)
             : `Variance of $${li.variance?.toFixed(2)} detected.`;
