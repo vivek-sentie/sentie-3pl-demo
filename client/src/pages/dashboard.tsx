@@ -390,16 +390,30 @@ export default function Dashboard() {
 
   const resumeSimulation = useCallback(() => {
     setSimulation(prev => ({ ...prev, isRunning: true }));
-    apInvoices.forEach(inv => {
-      if (pendingInvoiceActions[inv.id] && autonomyMode !== "full") return;
-      if (completedAPInvoices.has(inv.id)) return;
-      if (activeSteps[inv.id] !== undefined) runAPForInvoice(inv.id, activeSteps[inv.id]);
-    });
-    arInvoices.forEach(inv => {
-      if (pendingInvoiceActions[inv.id] && autonomyMode !== "full") return;
-      if (activeSteps[inv.id] !== undefined) runARForInvoice(inv.id, activeSteps[inv.id]);
-    });
-  }, [autonomyMode, apInvoices, arInvoices, activeSteps, completedAPInvoices, pendingInvoiceActions, runAPForInvoice, runARForInvoice]);
+
+    // Resume AP invoices
+    if (simulation.currentPhase === "ap") {
+      apInvoices.forEach(inv => {
+        if (pendingInvoiceActions[inv.id] && autonomyMode !== "full") return;
+        if (completedAPInvoices.has(inv.id)) return;
+        if (activeSteps[inv.id] !== undefined) runAPForInvoice(inv.id, activeSteps[inv.id]);
+      });
+    }
+
+    // Resume or Start AR invoices
+    if (simulation.currentPhase === "ar" || simulation.currentPhase === "ap") {
+      arInvoices.forEach(inv => {
+        if (pendingInvoiceActions[inv.id] && autonomyMode !== "full") return;
+
+        if (activeSteps[inv.id] !== undefined) {
+          runARForInvoice(inv.id, activeSteps[inv.id]);
+        } else if (simulation.currentPhase === "ar") {
+          // If we are in AR phase but this invoice hasn't started yet (e.g. paused during transition)
+          runARForInvoice(inv.id, 0);
+        }
+      });
+    }
+  }, [simulation.currentPhase, autonomyMode, apInvoices, arInvoices, activeSteps, completedAPInvoices, pendingInvoiceActions, runAPForInvoice, runARForInvoice]);
 
   const toggleSimulation = useCallback(() => {
     if (simulation.isRunning) pauseSimulation();
