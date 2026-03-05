@@ -116,6 +116,18 @@ export function InvoiceDetailsDialog({ invoice, orders, customer, activities, op
         return docs;
     }, [relevantActivities, invoice, isAP, apInvoice]);
 
+    // AR Dynamic Cost Visibility
+    const arProgress = useMemo(() => {
+        if (!arInvoice) return null;
+        return {
+            shippingRetrieved: relevantActivities.some(a => a.title === "Shipping Costs Retrieved"),
+            feesCalculated: relevantActivities.some(a => a.title === "Fulfillment Fees Calculated"),
+            packagingCalculated: relevantActivities.some(a => a.title === "Packaging & Storage"),
+            invoiceGenerated: relevantActivities.some(a => a.type === "invoice_generated"),
+            ordersCollected: relevantActivities.some(a => a.title === "Orders Collected"),
+        };
+    }, [arInvoice, relevantActivities]);
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl max-h-[90vh]">
@@ -333,42 +345,42 @@ export function InvoiceDetailsDialog({ invoice, orders, customer, activities, op
                                             </h4>
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-muted-foreground">Fulfillment (Base)</span>
-                                                <span>${arInvoice.totalFulfillmentFees.toFixed(2)}</span>
+                                                <span>{arProgress?.feesCalculated ? `$${arInvoice.totalFulfillmentFees.toFixed(2)}` : <span className="text-[10px] italic text-muted-foreground">Calculating...</span>}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-muted-foreground">Item Pick Fees</span>
-                                                <span>${arInvoice.totalItemPickFees.toFixed(2)}</span>
+                                                <span>{arProgress?.feesCalculated ? `$${arInvoice.totalItemPickFees.toFixed(2)}` : "-"}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-muted-foreground">Packaging Materials</span>
-                                                <span>${arInvoice.totalPackagingMaterials.toFixed(2)}</span>
+                                                <span>{arProgress?.packagingCalculated ? `$${arInvoice.totalPackagingMaterials.toFixed(2)}` : "-"}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-muted-foreground">Storage Fees</span>
-                                                <span>${arInvoice.totalStorage.toFixed(2)}</span>
+                                                <span>{arProgress?.packagingCalculated ? `$${arInvoice.totalStorage.toFixed(2)}` : "-"}</span>
                                             </div>
                                             <Separator />
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-muted-foreground">Warehouse Subtotal</span>
-                                                <span>${(arInvoice.totalFulfillmentFees + arInvoice.totalItemPickFees + arInvoice.totalPackagingMaterials + arInvoice.totalStorage).toFixed(2)}</span>
+                                                <span>{arProgress?.packagingCalculated ? `$${(arInvoice.totalFulfillmentFees + arInvoice.totalItemPickFees + arInvoice.totalPackagingMaterials + arInvoice.totalStorage).toFixed(2)}` : "-"}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-muted-foreground">Pass-Through Shipping</span>
-                                                <span>${arInvoice.totalShippingCost.toFixed(2)}</span>
+                                                <span>{arProgress?.shippingRetrieved ? `$${arInvoice.totalShippingCost.toFixed(2)}` : <span className="text-[10px] italic text-muted-foreground">Retrieving...</span>}</span>
                                             </div>
                                             <Separator />
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-muted-foreground">Cost Subtotal</span>
-                                                <span>${arInvoice.subtotal.toFixed(2)}</span>
+                                                <span>{arProgress?.invoiceGenerated ? `$${arInvoice.subtotal.toFixed(2)}` : "-"}</span>
                                             </div>
                                             <div className="flex justify-between text-sm text-primary">
                                                 <span>Management Fee ({customer?.managementFeePercent}%)</span>
-                                                <span>${arInvoice.managementFee.toFixed(2)}</span>
+                                                <span>{arProgress?.invoiceGenerated ? `$${arInvoice.managementFee.toFixed(2)}` : "-"}</span>
                                             </div>
                                             <Separator className="bg-primary/20" />
                                             <div className="flex justify-between font-bold text-base">
                                                 <span>Total Invoice Amount</span>
-                                                <span>${arInvoice.totalAmount.toFixed(2)}</span>
+                                                <span>{arProgress?.invoiceGenerated ? `$${arInvoice.totalAmount.toFixed(2)}` : <span className="text-[10px] italic text-muted-foreground">Pending Generation</span>}</span>
                                             </div>
                                         </div>
                                     </div>
