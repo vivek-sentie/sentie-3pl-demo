@@ -409,8 +409,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent spacebar scrolling if focused on body
-      if (e.code === 'Space' && e.target === document.body) {
+      // Ignore if user is typing in an input
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.code === 'Space') {
         e.preventDefault();
         toggleSimulation();
       }
